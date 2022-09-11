@@ -110,7 +110,7 @@ class MCP23017(HighLevelAnalyzer):
         self.address    = None
         self.data       = bytearray()
         self.start_time = None
-        self.read       = None
+        self.read       = False
 
     def ll_fsm(self, frame):
         out = None
@@ -121,14 +121,17 @@ class MCP23017(HighLevelAnalyzer):
                 return out
         elif self.state == LLState.START:
             if frame.type == "address" and frame.data["ack"]:
-                self.read = frame.data["read"]
+                self.read |= frame.data["read"]
                 self.address = frame.data["address"][0]
                 if START_ADDRESS <= self.address < START_ADDRESS + N_ADDRESSES:
                     self.state = LLState.DATA
                     return out
         elif self.state == LLState.DATA:
-            if frame.type == "data" and frame.data["ack"]:
+            if frame.type == "data":
                 self.data.extend(frame.data["data"])
+                return out
+            elif frame.type == "start":
+                self.state = LLState.START
                 return out
             elif frame.type == "stop":
                 self.state = LLState.IDLE
@@ -148,7 +151,7 @@ class MCP23017(HighLevelAnalyzer):
             iocon_bank = self.IOCON_BANK[i2c_frame.address]
             data = []
             for regaddr, regval in enumerate(i2c_frame.data[1:], start=start_reg):
-                reg_name = MAP[iocon_bank][regaddr]
+                reg_name = MAP[iocon_bank].get(regaddr, f"{regaddr:#04x}?")
                 if reg_name == "IOCON":
                     if not i2c_frame.read:
                         self.IOCON_BANK[i2c_frame.address] = iocon_bit_test(regval, "BANK")
