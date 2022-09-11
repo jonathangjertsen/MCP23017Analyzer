@@ -1,0 +1,13 @@
+{
+  "name": "MCP23017",
+  "apiVersion": "1.0.0",
+  "author": "Jonathan Reichelt Gjertsen",
+  "version": "1.0.0",
+  "description": "Decodes MCP23017 I2C traffic.",
+  "extensions": {
+    "MCP23017": {
+      "type": "HighLevelAnalyzer",
+      "entryPoint": "MCP23017.MCP23017"
+    }
+  }
+}
